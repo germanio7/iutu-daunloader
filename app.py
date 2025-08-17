@@ -3,7 +3,9 @@ import yt_dlp
 import os
 import uuid
 import glob
+from dotenv import load_dotenv
 
+load_dotenv()
 app = Flask(__name__)
 
 @app.route('/')
@@ -17,7 +19,7 @@ def download():
         return jsonify({'error': 'URL requerida'}), 400
     
     try:
-        output_path = "downloads"
+        output_path = os.getenv('DOWNLOAD_PATH', 'downloads')
         if not os.path.exists(output_path):
             os.makedirs(output_path)
         
@@ -28,7 +30,7 @@ def download():
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
-                'preferredquality': '192',
+                'preferredquality': os.getenv('MP3_QUALITY', '192'),
             }],
             'outtmpl': f'{output_path}/{download_id}_%(title)s',
             'final_ext': 'mp3',
@@ -63,4 +65,8 @@ def get_file(filename):
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.getenv('PORT', 5000))
+    debug = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    app_url = os.getenv('APP_URL', f'http://localhost:{port}')
+    print(f'Aplicación ejecutándose en: {app_url}')
+    app.run(debug=debug, port=port)
