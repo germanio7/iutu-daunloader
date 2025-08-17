@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descargador MP3 YouTube</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h1 class="text-2xl font-bold text-center mb-6 text-gray-800">Descargador MP3</h1>
+        
+        <form id="downloadForm" class="space-y-4">
+            <div>
+                <input 
+                    type="url" 
+                    id="urlInput" 
+                    placeholder="Pega la URL de YouTube aquí..." 
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                >
+            </div>
+            
+            <button 
+                type="submit" 
+                class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition duration-200"
+            >
+                Descargar MP3
+            </button>
+        </form>
+        
+        <div id="message" class="mt-4 text-center hidden"></div>
+    </div>
+
+    <script>
+        document.getElementById('downloadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const url = document.getElementById('urlInput').value;
+            const messageDiv = document.getElementById('message');
+            const button = document.querySelector('button[type="submit"]');
+            
+            button.disabled = true;
+            button.textContent = 'Descargando...';
+            messageDiv.className = 'mt-4 text-center text-blue-600';
+            messageDiv.textContent = 'Procesando video...';
+            messageDiv.classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({url})
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    messageDiv.className = 'mt-4 text-center text-green-600';
+                    messageDiv.textContent = `Descargando: ${result.title}`;
+                    
+                    // Descargar automáticamente
+                    const link = document.createElement('a');
+                    link.href = `/get-file/${result.filename}`;
+                    link.download = result.filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    setTimeout(() => {
+                        messageDiv.textContent = 'Descarga completada!';
+                    }, 1000);
+                } else {
+                    messageDiv.className = 'mt-4 text-center text-red-600';
+                    messageDiv.textContent = result.error || 'Error en la descarga';
+                }
+            } catch (error) {
+                messageDiv.className = 'mt-4 text-center text-red-600';
+                messageDiv.textContent = 'Error de conexión';
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Descargar MP3';
+            }
+        });
+    </script>
+</body>
+</html>
