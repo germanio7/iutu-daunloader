@@ -67,6 +67,14 @@ def get_file(filename):
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     debug = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    production = os.getenv('PRODUCTION', 'False').lower() == 'true'
     app_url = os.getenv('APP_URL', f'http://localhost:{port}')
+    
     print(f'Aplicación ejecutándose en: {app_url}')
-    app.run(debug=debug, port=port)
+    
+    if production:
+        print('Modo producción: Usa "gunicorn -w 4 -b 0.0.0.0:5000 wsgi:app"')
+    else:
+        print('Modo desarrollo')
+    
+    app.run(debug=debug, port=port, host='0.0.0.0' if production else '127.0.0.1')
