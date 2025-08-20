@@ -13,7 +13,7 @@ py -m pip install -r requirements.txt
 
 3. Instala ffmpeg:
 ```bash 
-docker pull jrottenberg/ffmpeg
+docker pull linuxserver/ffmpeg
 ```
 
 ## Uso

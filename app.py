@@ -24,7 +24,7 @@ def convert_to_mp3(input_file, output_file):
         cmd = [
             'docker', 'run', '--rm',
             '-v', f'{docker_path}:/data',
-            'jrottenberg/ffmpeg',
+            'linuxserver/ffmpeg',
             '-i', f'/data/{temp_input}',
             '-vn', '-acodec', 'libmp3lame', '-ab', '192k',
             f'/data/{temp_output}'
