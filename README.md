@@ -7,9 +7,9 @@
 py -m pip install -r requirements.txt
 ```
 
-2. Instala FFmpeg:
-   - Descarga desde: https://ffmpeg.org/download.html
-   - Agrega FFmpeg al PATH del sistema
+2. Instala Docker:
+   - Descarga desde: https://www.docker.com/get-started
+   - Asegúrate de que Docker esté ejecutándose
 
 ## Uso
 

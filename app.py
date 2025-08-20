@@ -27,28 +27,24 @@ def download():
         
         ydl_opts = {
             'format': 'bestaudio[ext=m4a]/bestaudio/best',
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': os.getenv('MP3_QUALITY', '192'),
-            }],
-            'outtmpl': f'{output_path}/{download_id}_%(title)s',
-            'final_ext': 'mp3',
+            'outtmpl': f'{output_path}/{download_id}_%(title)s.%(ext)s',
+            'noplaylist': True,
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             title = info.get('title', 'audio')
         
-        mp3_files = glob.glob(f'{output_path}/{download_id}_*.mp3')
-        if mp3_files:
+        # Buscar archivo descargado
+        downloaded_files = glob.glob(f'{output_path}/{download_id}_*')
+        if downloaded_files:
             return jsonify({
                 'success': True,
-                'filename': os.path.basename(mp3_files[0]),
+                'filename': os.path.basename(downloaded_files[0]),
                 'title': title
             })
         else:
-            return jsonify({'error': 'No se pudo generar el archivo MP3'}), 500
+            return jsonify({'error': 'No se pudo descargar el archivo'}), 500
             
     except Exception as e:
         return jsonify({'error': f'Error: {str(e)}'}), 500

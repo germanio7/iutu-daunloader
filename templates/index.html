@@ -69,6 +69,7 @@
                     
                     setTimeout(() => {
                         messageDiv.textContent = 'Descarga completada!';
+                        document.getElementById('urlInput').value = '';
                     }, 1000);
                 } else {
                     messageDiv.className = 'mt-4 text-center text-red-600';
