@@ -3,10 +3,42 @@ import yt_dlp
 import os
 import uuid
 import glob
+import subprocess
 from dotenv import load_dotenv
 
 load_dotenv()
 app = Flask(__name__)
+
+def convert_to_mp3(input_file, output_file):
+    # Crear nombres temporales simples
+    temp_input = f'temp_input.{input_file.split(".")[-1]}'
+    temp_output = 'temp_output.mp3'
+    
+    # Renombrar temporalmente
+    os.rename(input_file, temp_input)
+    
+    try:
+        # Convertir ruta de Windows a formato Unix para Docker
+        docker_path = os.getcwd().replace('\\', '/')
+        
+        cmd = [
+            'docker', 'run', '--rm',
+            '-v', f'{docker_path}:/data',
+            'jrottenberg/ffmpeg',
+            '-i', f'/data/{temp_input}',
+            '-vn', '-acodec', 'libmp3lame', '-ab', '192k',
+            f'/data/{temp_output}'
+        ]
+        subprocess.run(cmd, check=True)
+        
+        # Renombrar al nombre final
+        os.rename(temp_output, output_file)
+        os.remove(temp_input)
+    except:
+        # Si falla, restaurar nombre original
+        if os.path.exists(temp_input):
+            os.rename(temp_input, input_file)
+        raise
 
 @app.route('/')
 def index():
@@ -38,9 +70,15 @@ def download():
         # Buscar archivo descargado
         downloaded_files = glob.glob(f'{output_path}/{download_id}_*')
         if downloaded_files:
+            input_file = downloaded_files[0]
+            output_file = input_file.rsplit('.', 1)[0] + '.mp3'
+            
+            # Convertir a MP3
+            convert_to_mp3(input_file, output_file)
+            
             return jsonify({
                 'success': True,
-                'filename': os.path.basename(downloaded_files[0]),
+                'filename': os.path.basename(output_file),
                 'title': title
             })
         else:

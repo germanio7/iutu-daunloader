@@ -11,6 +11,11 @@ py -m pip install -r requirements.txt
    - Descarga desde: https://www.docker.com/get-started
    - Asegúrate de que Docker esté ejecutándose
 
+3. Instala ffmpeg:
+```bash 
+docker pull jrottenberg/ffmpeg
+```
+
 ## Uso
 
 ### Interfaz Web (Recomendado)
