@@ -24,6 +24,12 @@ py app.py
 ```
 Abre http://localhost:5000 en tu navegador
 
+### Producción (WSGI)
+```bash
+py -m pip install gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 wsgi:app
+```
+
 ### Línea de comandos
 ```bash
 py downloader.py
