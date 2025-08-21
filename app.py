@@ -11,6 +11,11 @@ app = Flask(__name__)
 
 def find_ffmpeg():
     """Encuentra la ubicación de FFmpeg en el sistema"""
+    # Verificar ubicación conocida primero
+    if os.path.isfile('/usr/bin/ffmpeg'):
+        return '/usr/bin/ffmpeg'
+    
+    # Intentar con which
     try:
         result = subprocess.run(['which', 'ffmpeg'], capture_output=True, text=True)
         if result.returncode == 0:
@@ -18,14 +23,6 @@ def find_ffmpeg():
     except:
         pass
     
-    # Ubicaciones comunes
-    common_paths = ['/usr/bin/ffmpeg', '/usr/local/bin/ffmpeg', 'ffmpeg']
-    for path in common_paths:
-        try:
-            subprocess.run([path, '-version'], capture_output=True, check=True)
-            return path
-        except:
-            continue
     return None
 
 def convert_to_mp3(input_file, output_file):
