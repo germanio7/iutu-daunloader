@@ -10,35 +10,17 @@ load_dotenv()
 app = Flask(__name__)
 
 def convert_to_mp3(input_file, output_file):
-    # Crear nombres temporales simples
-    temp_input = f'temp_input.{input_file.split(".")[-1]}'
-    temp_output = 'temp_output.mp3'
-    
-    # Renombrar temporalmente
-    os.rename(input_file, temp_input)
-    
     try:
-        # Convertir ruta de Windows a formato Unix para Docker
-        docker_path = os.getcwd().replace('\\', '/')
-        
         cmd = [
-            'docker', 'run', '--rm',
-            '-v', f'{docker_path}:/data',
-            'linuxserver/ffmpeg',
-            '-i', f'/data/{temp_input}',
+            'ffmpeg', '-i', input_file,
             '-vn', '-acodec', 'libmp3lame', '-ab', '192k',
-            f'/data/{temp_output}'
+            output_file
         ]
         subprocess.run(cmd, check=True)
-        
-        # Renombrar al nombre final
-        os.rename(temp_output, output_file)
-        os.remove(temp_input)
-    except:
-        # Si falla, restaurar nombre original
-        if os.path.exists(temp_input):
-            os.rename(temp_input, input_file)
-        raise
+        os.remove(input_file)
+    except FileNotFoundError:
+        # Si FFmpeg no está disponible, usar yt-dlp para conversión
+        raise Exception('FFmpeg no disponible')
 
 @app.route('/')
 def index():
@@ -59,7 +41,12 @@ def download():
         
         ydl_opts = {
             'format': 'bestaudio[ext=m4a]/bestaudio/best',
-            'outtmpl': f'{output_path}/{download_id}_%(title)s.%(ext)s',
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+            'outtmpl': f'{output_path}/{download_id}_%(title)s',
             'noplaylist': True,
         }
         
@@ -67,22 +54,16 @@ def download():
             info = ydl.extract_info(url, download=True)
             title = info.get('title', 'audio')
         
-        # Buscar archivo descargado
-        downloaded_files = glob.glob(f'{output_path}/{download_id}_*')
-        if downloaded_files:
-            input_file = downloaded_files[0]
-            output_file = input_file.rsplit('.', 1)[0] + '.mp3'
-            
-            # Convertir a MP3
-            convert_to_mp3(input_file, output_file)
-            
+        # Buscar archivo MP3 generado
+        mp3_files = glob.glob(f'{output_path}/{download_id}_*.mp3')
+        if mp3_files:
             return jsonify({
                 'success': True,
-                'filename': os.path.basename(output_file),
+                'filename': os.path.basename(mp3_files[0]),
                 'title': title
             })
         else:
-            return jsonify({'error': 'No se pudo descargar el archivo'}), 500
+            return jsonify({'error': 'No se pudo generar el archivo MP3'}), 500
             
     except Exception as e:
         return jsonify({'error': f'Error: {str(e)}'}), 500

@@ -7,14 +7,10 @@
 py -m pip install -r requirements.txt
 ```
 
-2. Instala Docker:
-   - Descarga desde: https://www.docker.com/get-started
-   - Asegúrate de que Docker esté ejecutándose
-
-3. Instala ffmpeg:
-```bash 
-docker pull linuxserver/ffmpeg
-```
+2. Para desarrollo local, instala FFmpeg:
+   - Windows: Descarga desde https://ffmpeg.org/download.html
+   - Linux: `sudo apt install ffmpeg`
+   - macOS: `brew install ffmpeg`
 
 ## Uso
 
@@ -23,6 +19,12 @@ docker pull linuxserver/ffmpeg
 py app.py
 ```
 Abre http://localhost:5000 en tu navegador
+
+### Docker (Para Dokploy)
+```bash
+docker build -t iutu-mp3-download .
+docker run -p 5000:5000 iutu-mp3-download
+```
 
 ### Línea de comandos
 ```bash
