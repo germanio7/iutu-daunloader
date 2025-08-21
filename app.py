@@ -26,13 +26,9 @@ def find_ffmpeg():
     return None
 
 def convert_to_mp3(input_file, output_file):
-    ffmpeg_path = find_ffmpeg()
-    if not ffmpeg_path:
-        raise Exception('FFmpeg no encontrado en el sistema')
-    
     try:
         cmd = [
-            ffmpeg_path, '-i', input_file,
+            '/usr/bin/ffmpeg', '-i', input_file,
             '-vn', '-acodec', 'libmp3lame', '-ab', '192k',
             output_file
         ]
