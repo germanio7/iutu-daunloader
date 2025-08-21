@@ -89,7 +89,18 @@ def get_file(filename):
     try:
         file_path = os.path.join('downloads', filename)
         if os.path.exists(file_path):
-            return send_file(file_path, as_attachment=True)
+            response = send_file(file_path, as_attachment=True)
+            # Programar eliminación del archivo después de enviarlo
+            import threading
+            def delete_file():
+                import time
+                time.sleep(2)  # Esperar 2 segundos para asegurar que se envió
+                try:
+                    os.remove(file_path)
+                except:
+                    pass
+            threading.Thread(target=delete_file).start()
+            return response
         else:
             return jsonify({'error': 'Archivo no encontrado'}), 404
     except Exception as e:
