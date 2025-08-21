@@ -9,6 +9,25 @@ from dotenv import load_dotenv
 load_dotenv()
 app = Flask(__name__)
 
+def find_ffmpeg():
+    """Encuentra la ubicación de FFmpeg en el sistema"""
+    try:
+        result = subprocess.run(['which', 'ffmpeg'], capture_output=True, text=True)
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except:
+        pass
+    
+    # Ubicaciones comunes
+    common_paths = ['/usr/bin/ffmpeg', '/usr/local/bin/ffmpeg', 'ffmpeg']
+    for path in common_paths:
+        try:
+            subprocess.run([path, '-version'], capture_output=True, check=True)
+            return path
+        except:
+            continue
+    return None
+
 def convert_to_mp3(input_file, output_file):
     try:
         cmd = [
@@ -39,6 +58,7 @@ def download():
         
         download_id = str(uuid.uuid4())[:8]
         
+        ffmpeg_path = find_ffmpeg()
         ydl_opts = {
             'format': 'bestaudio[ext=m4a]/bestaudio/best',
             'postprocessors': [{
@@ -49,6 +69,9 @@ def download():
             'outtmpl': f'{output_path}/{download_id}_%(title)s',
             'noplaylist': True,
         }
+        
+        if ffmpeg_path:
+            ydl_opts['ffmpeg_location'] = ffmpeg_path
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
