@@ -105,4 +105,4 @@ if __name__ == '__main__':
     print(f'Aplicación ejecutándose en: {app_url}')
     print('Modo desarrollo')
     
-    app.run(debug=True, port=port, host='127.0.0.1')
+    app.run(debug=True, port=port, host='0.0.0.0')
