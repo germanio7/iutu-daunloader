@@ -94,7 +94,7 @@ def get_file(filename):
             import threading
             def delete_file():
                 import time
-                time.sleep(2)  # Esperar 2 segundos para asegurar que se envió
+                time.sleep(60)  # Esperar 60 segundos para asegurar que se envió
                 try:
                     os.remove(file_path)
                 except:
