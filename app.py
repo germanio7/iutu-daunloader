@@ -7,7 +7,7 @@ import subprocess
 from dotenv import load_dotenv
 
 load_dotenv()
-app = Flask(__name__)
+app = Flask(__name__, static_folder='public', static_url_path='/static')
 
 def find_ffmpeg():
     """Encuentra la ubicación de FFmpeg en el sistema"""
