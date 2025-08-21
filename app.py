@@ -29,17 +29,20 @@ def find_ffmpeg():
     return None
 
 def convert_to_mp3(input_file, output_file):
+    ffmpeg_path = find_ffmpeg()
+    if not ffmpeg_path:
+        raise Exception('FFmpeg no encontrado en el sistema')
+    
     try:
         cmd = [
-            'ffmpeg', '-i', input_file,
+            ffmpeg_path, '-i', input_file,
             '-vn', '-acodec', 'libmp3lame', '-ab', '192k',
             output_file
         ]
         subprocess.run(cmd, check=True)
         os.remove(input_file)
-    except FileNotFoundError:
-        # Si FFmpeg no está disponible, usar yt-dlp para conversión
-        raise Exception('FFmpeg no disponible')
+    except Exception as e:
+        raise Exception(f'Error al convertir a MP3: {str(e)}')
 
 @app.route('/')
 def index():
@@ -58,35 +61,32 @@ def download():
         
         download_id = str(uuid.uuid4())[:8]
         
-        ffmpeg_path = find_ffmpeg()
         ydl_opts = {
-            'format': 'bestaudio[ext=m4a]/bestaudio/best',
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }],
-            'outtmpl': f'{output_path}/{download_id}_%(title)s',
+            'format': 'bestaudio/best',
+            'outtmpl': f'{output_path}/{download_id}_%(title)s.%(ext)s',
             'noplaylist': True,
         }
-        
-        if ffmpeg_path:
-            ydl_opts['ffmpeg_location'] = ffmpeg_path
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             title = info.get('title', 'audio')
         
-        # Buscar archivo MP3 generado
-        mp3_files = glob.glob(f'{output_path}/{download_id}_*.mp3')
-        if mp3_files:
+        # Buscar archivo descargado
+        downloaded_files = glob.glob(f'{output_path}/{download_id}_*')
+        if downloaded_files:
+            input_file = downloaded_files[0]
+            output_file = input_file.rsplit('.', 1)[0] + '.mp3'
+            
+            # Convertir a MP3
+            convert_to_mp3(input_file, output_file)
+            
             return jsonify({
                 'success': True,
-                'filename': os.path.basename(mp3_files[0]),
+                'filename': os.path.basename(output_file),
                 'title': title
             })
         else:
-            return jsonify({'error': 'No se pudo generar el archivo MP3'}), 500
+            return jsonify({'error': 'No se pudo descargar el archivo'}), 500
             
     except Exception as e:
         return jsonify({'error': f'Error: {str(e)}'}), 500
