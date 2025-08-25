@@ -67,17 +67,12 @@ def download():
         
         ydl_opts = {
             'format': 'bestaudio/best',
-            'postprocessors': [
-                {
-                    'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
-                    'preferredquality': '192',
-                },
-                {
-                    'key': 'FFmpegPostProcessor',
-                    'args': ['-af', 'silenceremove=start_periods=1:start_duration=1:start_threshold=-60dB:detection=peak,aformat=dblp,areverse,silenceremove=start_periods=1:start_duration=1:start_threshold=-60dB:detection=peak,aformat=dblp,areverse']
-                }
-            ],
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+                'postprocessor_args': ['-af', 'silenceremove=start_periods=1:start_duration=0.5:start_threshold=-50dB']
+            }],
             'outtmpl': f'{output_path}/{download_id}_%(title)s',
             'noplaylist': True,
             'ffmpeg_location': '/usr/bin/ffmpeg',
