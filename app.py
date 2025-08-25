@@ -10,6 +10,15 @@ from dotenv import load_dotenv
 load_dotenv()
 app = Flask(__name__, static_folder='public', static_url_path='/static')
 
+def sanitize_filename(filename):
+    """Elimina caracteres especiales del nombre del archivo"""
+    import re
+    # Mantener solo letras, números, espacios, guiones y puntos
+    sanitized = re.sub(r'[^\w\s.-]', '', filename)
+    # Reemplazar múltiples espacios con uno solo
+    sanitized = re.sub(r'\s+', ' ', sanitized)
+    return sanitized.strip()
+
 def cleanup_old_files():
     """Elimina archivos más antiguos de 1 hora"""
     try:
@@ -66,6 +75,7 @@ def download():
             'outtmpl': f'{output_path}/{download_id}_%(title)s',
             'noplaylist': True,
             'ffmpeg_location': '/usr/bin/ffmpeg',
+            'restrictfilenames': True,
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
