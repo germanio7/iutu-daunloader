@@ -22,7 +22,7 @@ def cleanup_old_files():
             file_path = os.path.join(downloads_path, filename)
             if os.path.isfile(file_path):
                 file_age = current_time - os.path.getmtime(file_path)
-                if file_age > 3600:  # 1 hora en segundos
+                if file_age > 7200:  # 2 horas en segundos
                     os.remove(file_path)
                     print(f'Archivo eliminado: {filename}')
     except Exception as e:
@@ -53,8 +53,6 @@ def download():
         if not os.path.exists(output_path):
             os.makedirs(output_path)
         
-        # Limpiar archivos antiguos antes de descargar
-        cleanup_old_files()
         
         download_id = str(uuid.uuid4())[:8]
         
@@ -82,8 +80,17 @@ def download():
                 'filename': os.path.basename(mp3_files[0]),
                 'title': title
             })
-        else:
-            return jsonify({'error': 'No se pudo generar el archivo MP3'}), 500
+        
+        # Si no hay MP3, buscar cualquier archivo generado
+        all_files = glob.glob(f'{output_path}/{download_id}_*')
+        if all_files:
+            return jsonify({
+                'success': True,
+                'filename': os.path.basename(all_files[0]),
+                'title': title
+            })
+        
+        return jsonify({'error': 'No se pudo generar el archivo'}), 500
             
     except Exception as e:
         return jsonify({'error': f'Error: {str(e)}'}), 500
