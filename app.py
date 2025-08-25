@@ -10,6 +10,34 @@ from dotenv import load_dotenv
 load_dotenv()
 app = Flask(__name__, static_folder='public', static_url_path='/static')
 
+def cleanup_old_files():
+    """Elimina archivos más antiguos de 1 hora"""
+    try:
+        downloads_path = os.getenv('DOWNLOAD_PATH', 'downloads')
+        if not os.path.exists(downloads_path):
+            return
+        
+        current_time = time.time()
+        for filename in os.listdir(downloads_path):
+            file_path = os.path.join(downloads_path, filename)
+            if os.path.isfile(file_path):
+                file_age = current_time - os.path.getmtime(file_path)
+                if file_age > 3600:  # 1 hora en segundos
+                    os.remove(file_path)
+                    print(f'Archivo eliminado: {filename}')
+    except Exception as e:
+        print(f'Error en limpieza: {e}')
+
+def start_cleanup_scheduler():
+    """Inicia el programador de limpieza automática"""
+    def cleanup_loop():
+        while True:
+            cleanup_old_files()
+            time.sleep(1800)  # Ejecutar cada 30 minutos
+    
+    cleanup_thread = threading.Thread(target=cleanup_loop, daemon=True)
+    cleanup_thread.start()
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -24,6 +52,9 @@ def download():
         output_path = os.getenv('DOWNLOAD_PATH', 'downloads')
         if not os.path.exists(output_path):
             os.makedirs(output_path)
+        
+        # Limpiar archivos antiguos antes de descargar
+        cleanup_old_files()
         
         download_id = str(uuid.uuid4())[:8]
         
@@ -78,10 +109,14 @@ def get_file(filename):
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
+    # Iniciar limpieza automática
+    start_cleanup_scheduler()
+    
     port = int(os.getenv('PORT', 5000))
     app_url = f'http://localhost:{port}'
     
     print(f'Aplicación ejecutándose en: {app_url}')
     print('Modo desarrollo')
+    print('Limpieza automática iniciada')
     
     app.run(debug=True, port=port, host='0.0.0.0')
